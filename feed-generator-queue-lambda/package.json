@@ -1,0 +1,18 @@
+{
+  "name": "feed-generator-queue-lambda",
+  "version": "1.0.0",
+  "description": "Lambda Function code for generating feed for users",
+  "main": "dist/app.js",
+  "dependencies": {
+    "mysql2": "^2.2.5"
+  },
+  "scripts": {
+    "build": "mkdir dist & if exist dist rmdir /s /q dist && tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^15.12.2",
+    "aws-sdk": "^2.930.0"
+  },
+  "author": "Mohit Mangal <mohitmangal.ece18@itbhu.ac.in>",
+  "license": "ISC"
+}
