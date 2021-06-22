@@ -1,11 +1,9 @@
 {
   "name": "Feed-Generator-Service",
   "version": "1.0.0",
-  "description": "This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "sam-build": "cd ws-disconnect-handler-queue-lambda && npm run build && cd .. && sam build -u --parallel",
+    "sam-build": "cd feed-generator-queue-lambda && npm run build && cd .. && sam build -u --parallel",
     "sam-deploy": "sam deploy",
     "sam-build-deploy": "npm run sam-build && npm run sam-deploy"
   },

@@ -1,15 +1,6 @@
-import {
-  dbName,
-  dynamoClient,
-  FeedItem,
-  followingTableName,
-  HomeFeedTable,
-  hostName,
-  rdsUsername,
-  signer,
-} from "./config";
+import { dbName, FeedItem, hostName, rdsUsername, signer } from "./config";
 
-import mysql, { ConnectionOptions } from "mysql2";
+import mysql, { ConnectionOptions } from "mysql2/promise";
 
 import { feedGenerator } from "./feedGenerator";
 
@@ -32,16 +23,9 @@ exports.lambdaHandler = async (event: any, context: any) => {
     },
   };
 
-  const connection = mysql.createConnection(connectionConfig);
+  const connection = await mysql.createConnection(connectionConfig);
 
-  connection.connect(function (err) {
-    if (err) {
-      console.log("error connecting: " + err.stack);
-      return;
-    }
-
-    console.log("connected as id " + connection.threadId + "\n");
-  });
+  await connection.connect();
 
   const promises: Promise<any>[] = [];
 
@@ -69,14 +53,5 @@ exports.lambdaHandler = async (event: any, context: any) => {
   await Promise.all(promises);
 
   // closing the connection.
-
-  return new Promise((resolve, reject) => {
-    connection.end((err) => {
-      if (err) return reject(err);
-      const response = {
-        statusCode: 200,
-      };
-      resolve(response);
-    });
-  });
+  await connection.end();
 };

@@ -22,12 +22,24 @@ const signer = new AWS.RDS.Signer({
   username: rdsUsername,
 });
 
-const HomeFeedTable = "HomeFeedTable";
+const GeneralPopTable = "GeneralPopTable";
 
 interface FeedItem {
   postId: string;
   imageUrl: string;
   timestamp: number;
+}
+
+interface GeneralPopTableKeySchema {
+  PK: string;
+  SK: string;
+}
+
+function generateKeyForFeedFromTable(username: string) {
+  return <GeneralPopTableKeySchema>{
+    PK: `USER#${username}`,
+    SK: `FEED#${username}`,
+  };
 }
 
 export {
@@ -37,6 +49,7 @@ export {
   signer,
   followingTableName,
   dynamoClient,
-  HomeFeedTable,
+  GeneralPopTable,
   FeedItem,
+  generateKeyForFeedFromTable,
 };

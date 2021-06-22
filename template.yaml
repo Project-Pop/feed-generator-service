@@ -11,20 +11,7 @@ Globals:
     Runtime: nodejs12.x
 
 Resources:
- HomeFeedTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: HomeFeedTable
-      BillingMode: PAY_PER_REQUEST # set capacity to on-demand mode
-
-      AttributeDefinitions:
-        - AttributeName: username
-          AttributeType: S
-
-      KeySchema:
-        - AttributeName: username
-          KeyType: HASH
-
+ 
  FeedGeneratorQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -34,9 +21,9 @@ Resources:
       KmsDataKeyReusePeriodSeconds: 86400 # 24 hours, for details
       # KmsMasterKeyId: String    # default will be used (aws managed)
       MaximumMessageSize: 10240 # 10 KB
-      MessageRetentionPeriod: 60 # 1 minute
+      MessageRetentionPeriod: 600 # 1 minute
       QueueName: FeedGeneratorQueue.fifo
-      ReceiveMessageWaitTimeSeconds: 1 # 1 second, For long polling
+      ReceiveMessageWaitTimeSeconds: 20 # 20 seconds(max), For long polling
       # RedrivePolicy:                    # to attach a dead-letter-queue, this is different DLQ than the one used for fail cases.
       #   deadLetterTargetArn: String
       #   maxReceiveCount: Integer
@@ -71,7 +58,7 @@ Resources:
         - AWSLambdaSQSQueueExecutionRole    # access permissions of SQS
 
         - DynamoDBCrudPolicy:
-            TableName: HomeFeedTable
+            TableName: GeneralPopTable
         
 
 
@@ -83,7 +70,7 @@ Outputs:
     Description: "URL of new FIFO SQS Queue for posting posts to be consumed by feed generator"
     Value:
       Ref: FeedGeneratorQueue
-  WsMsgQueueARN:
+  FeedGeneratorQueueARN:
     Description: "ARN of new FIFO SQS Queue for posting posts to be consumed by feed generator"
     Value:
       Fn::GetAtt:

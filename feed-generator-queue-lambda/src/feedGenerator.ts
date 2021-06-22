@@ -1,10 +1,11 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import mysql, { ConnectionOptions } from "mysql2";
+import mysql, { ConnectionOptions } from "mysql2/promise";
 import {
   dynamoClient,
   FeedItem,
   followingTableName,
-  HomeFeedTable,
+  GeneralPopTable,
+  generateKeyForFeedFromTable,
 } from "./config";
 
 export function feedGenerator(
@@ -26,19 +27,10 @@ export function feedGenerator(
   });
 }
 
-function fetchFollowers(connection: mysql.Connection, username: string) {
+async function fetchFollowers(connection: mysql.Connection, username: string) {
   const fetchFollowersQuery = `SELECT username FROM ${followingTableName} WHERE followerUsername = ${username}`;
-
-  return new Promise<any[]>((resolve, reject) => {
-    connection.query(fetchFollowersQuery, (error, results: any, fields) => {
-      if (error) {
-        reject("ERROR " + error);
-      }
-      //   TODO: do neccessary mapping here
-      console.log(results);
-      resolve(results);
-    });
-  });
+  const data = await connection.query(fetchFollowersQuery);
+  //   TODO: do neccessary mapping here
 }
 
 async function fanOutFeed(followers: any[], item: FeedItem) {
@@ -47,8 +39,8 @@ async function fanOutFeed(followers: any[], item: FeedItem) {
 
     const data = await dynamoClient
       .update({
-        TableName: HomeFeedTable,
-        Key: { username: followerUsername },
+        TableName: GeneralPopTable,
+        Key: generateKeyForFeedFromTable(followerUsername),
         UpdateExpression: "ADD feedItems :item",
         ExpressionAttributeValues: {
           ":item": dynamoClient.createSet([JSON.stringify(item)]), // dynamodb sets don't support non-primitive child type, eg Set<HashMaps> is not valid.
@@ -70,8 +62,6 @@ async function fanOutFeed(followers: any[], item: FeedItem) {
         values: [],
       };
 
-    dynamoClient.batchWrite;
-
     // if no of items is greater than 300 then delete few items, may be 50, which are oldest in list
     if (newFeedItemSet.values.length > 300) {
       // since item order in dynamodb set is unreliable, so sorting it in descending order of timestamp (after mapping to FeedItem)
@@ -86,8 +76,8 @@ async function fanOutFeed(followers: any[], item: FeedItem) {
 
       await dynamoClient
         .update({
-          TableName: HomeFeedTable,
-          Key: { username: followerUsername },
+          TableName: GeneralPopTable,
+          Key: generateKeyForFeedFromTable(followerUsername),
           UpdateExpression: "DELETE feedItems :item",
           ExpressionAttributeValues: {
             ":item": dynamoClient.createSet(toBeDeleted),
